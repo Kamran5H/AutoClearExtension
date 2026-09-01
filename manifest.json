@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Auto Clear & Optimize (Pro)",
+  "version": "2.3",
+  "description": "Auto-wipes history, cache, cookies and site data on a timer, and frees RAM by discarding idle tabs to keep Chrome fast and light.",
+  "permissions": [
+    "browsingData",
+    "alarms",
+    "storage",
+    "cookies",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Auto Clear & Optimize"
+  }
+}

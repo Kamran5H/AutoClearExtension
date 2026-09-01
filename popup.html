@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root {
+      --bg: #1e1e2e; --surface: #313244; --overlay: #45475a;
+      --text: #cdd6f4; --subtext: #a6adc8; --blue: #89b4fa;
+      --red: #f38ba8; --green: #a6e3a1; --yellow: #f9e2af; --crust: #11111b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 300px; padding: 14px; margin: 0;
+      font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
+      background: var(--bg); color: var(--text); font-size: 13px;
+    }
+    h2 {
+      font-size: 16px; margin: 0 0 12px; color: var(--blue);
+      text-align: center; border-bottom: 1px solid var(--overlay); padding-bottom: 10px;
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--overlay);
+      border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
+    }
+    .row { display: flex; justify-content: space-between; align-items: center; }
+    .stat { text-align: center; }
+    .stat .num { font-size: 18px; font-weight: bold; color: var(--yellow); }
+    .stat .lbl { font-size: 10px; color: var(--subtext); text-transform: uppercase; letter-spacing: .3px; }
+    .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--subtext); margin: 0 0 8px; }
+    label.chk { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+    select {
+      background: var(--overlay); color: var(--text); border: none;
+      border-radius: 6px; padding: 5px 8px; font-size: 12px; cursor: pointer;
+    }
+    button {
+      width: 100%; padding: 11px; border: none; border-radius: 8px;
+      font-weight: bold; font-size: 13px; cursor: pointer; text-transform: uppercase;
+      letter-spacing: .5px; transition: transform .15s ease, background .15s ease; margin-top: 8px;
+    }
+    button:hover { transform: translateY(-1px); }
+    .toggle.on { background: var(--red); color: white; }
+    .toggle.off { background: var(--green); color: var(--crust); }
+    .primary { background: var(--blue); color: var(--crust); }
+    .ghost { background: var(--overlay); color: var(--text); }
+    .warn { color: var(--yellow); }
+    .muted { font-size: 11px; color: var(--subtext); }
+    summary { cursor: pointer; color: var(--subtext); font-size: 12px; outline: none; }
+    details[open] summary { color: var(--blue); margin-bottom: 8px; }
+    .ok-flash { color: var(--green); font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Auto Clear &amp; Optimize</h2>
+
+  <div class="card row">
+    <div class="stat"><div class="num" id="clearCount">0</div><div class="lbl">Wipes</div></div>
+    <div class="stat"><div class="num" id="tabsDiscarded">0</div><div class="lbl">Tabs Freed</div></div>
+    <div class="stat"><div class="num" style="font-size:13px" id="lastCleared">Never</div><div class="lbl">Last Wipe</div></div>
+  </div>
+
+  <button id="toggleBtn" class="toggle on">Pause Auto-Clear</button>
+  <button id="wipeBtn" class="primary">Wipe Data Now</button>
+  <button id="optimizeBtn" class="ghost">Free RAM Now</button>
+  <div class="muted" id="flash" style="text-align:center;min-height:14px;margin-top:6px"></div>
+
+  <div class="card" style="margin-top:10px">
+    <div class="row" style="margin-bottom:8px">
+      <span class="section-title" style="margin:0">Clear every</span>
+      <select id="interval">
+        <option value="0.5">30 seconds</option>
+        <option value="1">1 minute</option>
+        <option value="2">2 minutes</option>
+        <option value="5">5 minutes</option>
+        <option value="10">10 minutes</option>
+        <option value="30">30 minutes</option>
+      </select>
+    </div>
+    <details>
+      <summary>What gets cleared</summary>
+      <div class="grid" id="categories">
+        <label class="chk"><input type="checkbox" data-cat="history"> History</label>
+        <label class="chk"><input type="checkbox" data-cat="cache"> Cache</label>
+        <label class="chk"><input type="checkbox" data-cat="cookies"> Cookies</label>
+        <label class="chk"><input type="checkbox" data-cat="localStorage"> Local storage</label>
+        <label class="chk"><input type="checkbox" data-cat="indexedDB"> IndexedDB</label>
+        <label class="chk"><input type="checkbox" data-cat="cacheStorage"> Cache storage</label>
+        <label class="chk"><input type="checkbox" data-cat="serviceWorkers"> Service workers</label>
+        <label class="chk"><input type="checkbox" data-cat="fileSystems"> File systems</label>
+        <label class="chk"><input type="checkbox" data-cat="downloads"> Download log</label>
+        <label class="chk"><input type="checkbox" data-cat="formData"> Form data</label>
+        <label class="chk" style="grid-column:1/3"><input type="checkbox" data-cat="passwords"> <span class="warn">Saved passwords (logs you out)</span></label>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Whitelist (kept alive, then wiped after grace)</summary>
+      <div class="muted" style="margin:6px 0 8px">
+        These domains aren't wiped instantly. Their cookies &amp; site storage are
+        kept for a grace window so a running login/scrape survives, then cleared.
+        One domain per line (subdomains included).
+      </div>
+      <textarea id="whitelist" rows="3" placeholder="amazon.com"
+        style="width:100%;resize:vertical;background:var(--overlay);color:var(--text);border:none;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit"></textarea>
+      <div class="row" style="margin-top:8px">
+        <span class="muted">Wipe whitelisted data after</span>
+        <select id="whitelistTtl">
+          <option value="1">1 minute</option>
+          <option value="2">2 minutes</option>
+          <option value="5">5 minutes</option>
+          <option value="10">10 minutes</option>
+        </select>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <label class="chk" style="margin-bottom:6px">
+      <input type="checkbox" id="optEnabled">
+      <strong>Tab Optimizer</strong> — free RAM from idle tabs
+    </label>
+    <div class="row">
+      <span class="muted">Discard tabs idle for</span>
+      <select id="idleMinutes">
+        <option value="2">2 min</option>
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+      </select>
+    </div>
+    <label class="chk" style="margin-top:6px">
+      <input type="checkbox" id="discardPinned"> Also discard pinned tabs
+    </label>
+    <div class="muted" style="margin-top:6px">Active &amp; audio-playing tabs are always kept.</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Diagnostic Logs</div>
+    <div id="logs" style="max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 10px; background: var(--crust); padding: 6px; border-radius: 4px; white-space: pre-wrap; word-break: break-all;"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
